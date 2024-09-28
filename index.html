@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQTT Sensor Monitoring</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        #status {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+        .alarm {
+            color: red;
+        }
+        .normal {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sensor Value Monitoring</h1>
+    <h2>Sensor Value: <span id="sensor-value">0</span></h2>
+    <h3 id="status" class="normal">Normal</h3>
+
+    <script>
+        // Create a script element to load the MQTT.js library from the CDN
+        const mqttScript = document.createElement('script');
+        mqttScript.src = "https://unpkg.com/mqtt/dist/mqtt.min.js";
+
+        // When the script is loaded, initialize MQTT connection and logic
+        mqttScript.onload = function () {
+            console.log('MQTT.js library loaded successfully');
+
+            const THRESHOLD = 75;
+            const TOPIC = 'sensor/temperature';
+            const MQTT_BROKER = 'ws://localhost:8083/mqtt'; // Update with your WebSocket broker's IP and port
+
+            // DOM elements to update the sensor value and status
+            const sensorValueElement = document.getElementById('sensor-value');
+            const statusElement = document.getElementById('status');
+
+            // Initialize the MQTT client and connect to the broker
+            const client = mqtt.connect(MQTT_BROKER);
+
+            // When connected to the MQTT broker
+            client.on('connect', function () {
+                console.log('Successfully connected to the MQTT broker');
+
+                // Subscribe to the topic that monitors sensor values
+                client.subscribe(TOPIC, function (err) {
+                    if (!err) {
+                        console.log(`Subscribed to the topic: ${TOPIC}`);
+                    } else {
+                        console.error(`Failed to subscribe to the topic: ${err}`);
+                    }
+                });
+            });
+
+            // Listen for incoming messages from the subscribed topic
+            client.on('message', function (topic, message) {
+                // Parse the message value (expected to be a number)
+                const value = parseFloat(message.toString());
+
+                // Update the UI with the received sensor value
+                sensorValueElement.textContent = value.toFixed(2);
+
+                // Check if the value exceeds the threshold and update the status
+                if (value > THRESHOLD) {
+                    statusElement.textContent = 'Alarm! Value above threshold';
+                    statusElement.className = 'alarm';
+                } else {
+                    statusElement.textContent = 'Normal';
+                    statusElement.className = 'normal';
+                }
+            });
+
+            // Handle connection errors
+            client.on('error', function (err) {
+                console.error('Connection error:', err);
+                statusElement.textContent = 'Connection Error';
+                statusElement.className = 'alarm';
+            });
+
+            // Handle disconnection from the MQTT broker
+            client.on('close', function () {
+                console.warn('Disconnected from MQTT broker');
+                statusElement.textContent = 'Disconnected';
+                statusElement.className = 'alarm';
+            });
+        };
+
+        // Append the script element to the document's head section to load the MQTT.js library
+        document.head.appendChild(mqttScript);
+    </script>
+</body>
+</html>
