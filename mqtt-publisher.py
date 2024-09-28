@@ -3,23 +3,26 @@ import random
 import time
 
 # Define MQTT server details
-BROKER = 'localhost'  # Change if necessary (e.g., use host IP or container IP)
-PORT = 1883  # Standard MQTT port exposed by EMQX in Docker
+BROKER = 'broker.emqx.io'  # Public EMQX broker
+PORT = 8083  # WebSocket port for EMQX
 TOPIC = 'sensor/temperature'
 
 # Set a threshold for alarming values
 THRESHOLD = 75
 
+# Callback for connection
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
-        print("Connected to EMQX broker")
+        print("Connected to EMQX broker over WebSocket")
     else:
         print(f"Failed to connect with result code {rc}")
 
+# Publish sensor values
 def publish_values():
-    client = mqtt.Client()
+    # Create a client instance
+    client = mqtt.Client(transport="websockets")  # Specify "websockets" as transport
     client.on_connect = on_connect
-    client.connect(BROKER, PORT, 60)
+    client.connect(BROKER, PORT, 60)  # Connect to broker over WebSockets
 
     client.loop_start()
 
