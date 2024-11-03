@@ -1,6 +1,18 @@
 
 # MQTT Sensor Monitoring Project
 
+## Introduction
+
+### Prerequisites
+
+- Python 3.10+
+
+### Setup Project
+
+`pip install paho-mqtt`
+
+## Project Description
+
 This project helps you monitor sensor values in real-time using MQTT over WebSockets. You'll see the sensor value on the screen, and if it gets too high, an alarm will appear.
 
 ## Key Concepts
